@@ -25,50 +25,20 @@ export function CatMap({ cats }: CatMapProps) {
     const mapInstance = useRef<Map | null>(null);
     const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
     const [popoverCoordinates, setPopoverCoordinates] = useState<number[] | undefined>(undefined);
+    const popoverTriggerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!mapRef.current) return;
 
-        const iconFeatures = cats.filter(cat => cat.latitude && cat.longitude).map(cat => {
-            const feature = new Feature({
-                geometry: new Point(fromLonLat([cat.longitude, cat.latitude])),
-                catData: cat,
-            });
-
-            feature.setStyle(new Style({
-                image: new Icon({
-                    anchor: [0.5, 0.5],
-                    anchorXUnits: 'fraction',
-                    anchorYUnits: 'fraction',
-                    src: cat.imageUrl,
-                    scale: 0.1, // Start small
-                }),
-            }));
-            
-            return feature;
-        });
-
-        const vectorSource = new VectorSource({
-            features: iconFeatures,
-        });
+        const vectorSource = new VectorSource();
 
         const vectorLayer = new VectorLayer({
             source: vectorSource,
-             style: (feature) => {
-                const cat = feature.get('catData') as Cat;
-                return new Style({
-                    image: new CircleStyle({
-                        radius: 30,
-                        fill: new Fill({ color: '#ffffff' }),
-                        stroke: new Stroke({ color: 'hsl(var(--primary))', width: 3 }),
-                    }),
-                });
-            },
         });
         
         const jakartaCoords = fromLonLat([106.8456, -6.2088]);
 
-        mapInstance.current = new Map({
+        const map = new Map({
             target: mapRef.current,
             layers: [
                 new TileLayer({
@@ -82,9 +52,10 @@ export function CatMap({ cats }: CatMapProps) {
             }),
             controls: [],
         });
+        mapInstance.current = map;
         
         cats.forEach(cat => {
-            if (!cat.imageUrl || !mapInstance.current) return;
+            if (!cat.imageUrl || !mapInstance.current || !cat.longitude || !cat.latitude) return;
 
             const markerElement = document.createElement('div');
             markerElement.className = 'w-16 h-16 rounded-full overflow-hidden border-4 border-primary/80 bg-background shadow-lg cursor-pointer transform hover:scale-110 transition-transform';
@@ -108,8 +79,8 @@ export function CatMap({ cats }: CatMapProps) {
             vectorSource.addFeature(feature);
         });
 
-        mapInstance.current.on('click', function(evt) {
-            const feature = mapInstance.current?.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        map.on('click', function(evt) {
+            const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
                 return feature;
             });
             
@@ -124,32 +95,43 @@ export function CatMap({ cats }: CatMapProps) {
             }
         });
 
-        return () => mapInstance.current?.setTarget(undefined);
+        return () => {
+            if (mapInstance.current) {
+                mapInstance.current.setTarget(undefined);
+            }
+        };
     }, [cats]);
     
     useEffect(() => {
-      if (popoverCoordinates && mapInstance.current) {
-        const popoverElement = document.getElementById('cat-popover');
-        if (popoverElement) {
+        if (popoverCoordinates && mapInstance.current && popoverTriggerRef.current) {
             const pixel = mapInstance.current.getPixelFromCoordinate(popoverCoordinates);
-            popoverElement.style.left = `${pixel[0]}px`;
-            popoverElement.style.top = `${pixel[1]}px`;
+            if (pixel) {
+                popoverTriggerRef.current.style.left = `${pixel[0]}px`;
+                popoverTriggerRef.current.style.top = `${pixel[1]}px`;
+            }
         }
-      }
-    }, [popoverCoordinates]);
+    }, [popoverCoordinates, selectedCat]);
+
+    const getPixel = (coords: number[]) => {
+        if (!mapInstance.current) return null;
+        return mapInstance.current.getPixelFromCoordinate(coords);
+    }
+    const currentPixel = popoverCoordinates ? getPixel(popoverCoordinates) : null;
+
 
     return (
         <div className="w-full h-full relative">
             <div ref={mapRef} className="w-full h-full" />
-             {selectedCat && popoverCoordinates && (
+             {selectedCat && popoverCoordinates && currentPixel && (
                 <Popover open={!!selectedCat} onOpenChange={(isOpen) => !isOpen && setSelectedCat(null)}>
                     <PopoverTrigger asChild>
                         <div
+                            ref={popoverTriggerRef}
                             id="cat-popover-trigger"
                             style={{
                                 position: 'absolute',
-                                left: `${mapInstance.current?.getPixelFromCoordinate(popoverCoordinates)[0]}px`,
-                                top: `${mapInstance.current?.getPixelFromCoordinate(popoverCoordinates)[1] + 40}px`,
+                                left: `${currentPixel ? currentPixel[0] : 0}px`,
+                                top: `${currentPixel ? currentPixel[1] + 40 : 0}px`,
                                 transform: 'translate(-50%, -100%)',
                             }}
                         />
