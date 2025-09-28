@@ -3,7 +3,7 @@ import 'ol/ol.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { fromLonLat, toLonLat } from 'ol/proj';
+import { fromLonLat } from 'ol/proj';
 import { Feature } from 'ol';
 import { Point } from 'ol/geom';
 import VectorLayer from 'ol/layer/Vector';
@@ -55,12 +55,8 @@ export function CatMap({ cats }: CatMapProps) {
         mapInstance.current = map;
         
         cats.forEach(cat => {
-            if (!cat.imageUrl || !mapInstance.current || !cat.longitude || !cat.latitude) return;
+            if (!cat.longitude || !cat.latitude) return;
 
-            const markerElement = document.createElement('div');
-            markerElement.className = 'w-16 h-16 rounded-full overflow-hidden border-4 border-primary/80 bg-background shadow-lg cursor-pointer transform hover:scale-110 transition-transform';
-            markerElement.innerHTML = `<img src="${cat.imageUrl}" alt="${cat.name}" class="w-full h-full object-cover" />`;
-            
             const point = new Point(fromLonLat([cat.longitude, cat.latitude]));
 
             const feature = new Feature({
@@ -68,14 +64,31 @@ export function CatMap({ cats }: CatMapProps) {
                 catData: cat,
             });
             
-            feature.setStyle(new Style({
-                image: new Icon({
-                    anchor: [0.5, 0.5],
-                    img: markerElement,
-                    imgSize: [64, 64]
-                }),
-            }));
+            let markerStyle;
+            if (cat.imageUrl) {
+                const markerElement = document.createElement('div');
+                markerElement.className = 'w-16 h-16 rounded-full overflow-hidden border-4 border-primary/80 bg-background shadow-lg cursor-pointer transform hover:scale-110 transition-transform';
+                markerElement.innerHTML = `<img src="${cat.imageUrl}" alt="${cat.name}" class="w-full h-full object-cover" />`;
+                
+                markerStyle = new Style({
+                    image: new Icon({
+                        anchor: [0.5, 0.5],
+                        img: markerElement,
+                        imgSize: [64, 64]
+                    }),
+                });
+            } else {
+                // Use a default marker if no image is available
+                markerStyle = new Style({
+                    image: new CircleStyle({
+                        radius: 8,
+                        fill: new Fill({ color: 'hsl(var(--primary))' }),
+                        stroke: new Stroke({ color: 'hsl(var(--background))', width: 3 }),
+                    }),
+                });
+            }
 
+            feature.setStyle(markerStyle);
             vectorSource.addFeature(feature);
         });
 
@@ -117,7 +130,6 @@ export function CatMap({ cats }: CatMapProps) {
         return mapInstance.current.getPixelFromCoordinate(coords);
     }
     const currentPixel = popoverCoordinates ? getPixel(popoverCoordinates) : null;
-
 
     return (
         <div className="w-full h-full relative">
