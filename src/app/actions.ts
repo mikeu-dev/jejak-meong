@@ -43,6 +43,7 @@ export async function addCat(
   });
 
   if (!validatedFields.success) {
+    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
     return {
       message: 'Please correct the errors below.',
       success: false,
@@ -82,14 +83,17 @@ export async function addCat(
     const snapshot = await uploadBytes(storageRef, imageFile);
     const imageUrl = await getDownloadURL(snapshot.ref);
 
-    // 2. Add cat data to Firestore
+    // 2. Prepare data for Firestore, separating GeoPoint
     const { latitude, longitude, ...restOfCatData } = catData;
-    await addDoc(collection(db, 'cats'), {
+    const dataToSave = {
       ...restOfCatData,
-      location: new GeoPoint(latitude, longitude),
       imageUrl,
+      location: new GeoPoint(latitude, longitude),
       createdAt: serverTimestamp(),
-    });
+    };
+
+    // 3. Add cat data to Firestore
+    await addDoc(collection(db, 'cats'), dataToSave);
 
   } catch (e: any) {
     console.error("Error adding cat:", e);
@@ -120,7 +124,7 @@ export async function getBreedSuggestions(formData: FormData): Promise<{ suggest
     const result = await suggestCatBreedsFromImage({ catImageDataUri });
 
     if (result.suggestedBreeds && result.suggestedBreeds.length > 0) {
-      return { suggestions: result.suggestedBreeds };
+      return { suggestions: result.suggestions };
     } else {
       return { suggestions: [], error: 'Could not identify breed. Please enter manually.' };
     }
