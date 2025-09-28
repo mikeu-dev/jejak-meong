@@ -91,9 +91,13 @@ export async function addCat(
       createdAt: serverTimestamp(),
     });
 
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error adding cat:", e);
-    return { success: false, message: 'Failed to add cat. An unexpected error occurred.' };
+    let errorMessage = 'Failed to add cat. An unexpected error occurred.';
+    if (e.code === 'failed-precondition' || (e.message && e.message.includes('firestore/unavailable'))) {
+        errorMessage = 'Failed to add cat. Please ensure Firestore Database is enabled in your Firebase project console.';
+    }
+    return { success: false, message: errorMessage };
   }
 
   revalidatePath('/');
