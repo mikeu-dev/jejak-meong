@@ -121,8 +121,8 @@ export function CatMap({ cats }: CatMapProps) {
                     </PopoverTrigger>
                     <PopoverContent className="w-80" onOpenAutoFocus={(e) => e.preventDefault()}>
                         <div className="grid gap-4">
-                            <div className="aspect-video relative rounded-md overflow-hidden">
-                                <Image src={selectedCat.imageUrl} alt={selectedCat.name} fill className="object-cover" />
+                            <div className="aspect-video relative rounded-md overflow-hidden bg-muted">
+                                {selectedCat.imageUrl && <Image src={selectedCat.imageUrl} alt={selectedCat.name} fill className="object-cover" />}
                             </div>
                             <div className="space-y-1">
                                 <h3 className="text-lg font-bold">{selectedCat.name}</h3>

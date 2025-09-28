@@ -26,8 +26,10 @@ export function CatList({ cats }: CatListProps) {
       {cats.map((cat) => (
         <Card key={cat.id} className="flex flex-col overflow-hidden">
           <CardHeader className="p-0">
-            <div className="aspect-video relative">
-              <Image src={cat.imageUrl} data-ai-hint="cat" alt={cat.name} fill className="object-cover" />
+            <div className="aspect-video relative bg-muted">
+              {cat.imageUrl && (
+                <Image src={cat.imageUrl} data-ai-hint="cat" alt={cat.name} fill className="object-cover" />
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-4 flex-1">
@@ -44,7 +46,7 @@ export function CatList({ cats }: CatListProps) {
                 <span>{cat.locationText}</span>
              </div>
              <p className="text-xs text-muted-foreground w-full">
-                Reported {formatDistanceToNow(new Date(cat.createdAt), { addSuffix: true })}
+                {cat.createdAt ? formatDistanceToNow(new Date(cat.createdAt), { addSuffix: true }) : 'A while ago'}
              </p>
           </CardFooter>
         </Card>
