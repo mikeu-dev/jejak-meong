@@ -96,6 +96,8 @@ export async function addCat(
     let errorMessage = 'Failed to add cat. An unexpected error occurred.';
     if (e.code === 'failed-precondition' || (e.message && e.message.includes('firestore/unavailable'))) {
         errorMessage = 'Failed to add cat. Please ensure Firestore Database is enabled in your Firebase project console.';
+    } else if (e.code === 'permission-denied') {
+        errorMessage = 'Failed to add cat due to a permissions issue. Please check your Firestore security rules.';
     }
     return { success: false, message: errorMessage };
   }
