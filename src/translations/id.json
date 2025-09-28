@@ -1,3 +1,4 @@
+
 {
   "appName": "Jejak Meong",
   "reportCatButton": "Lapor Kucing",
@@ -42,8 +43,7 @@
     "Location is required": "Lokasi wajib diisi",
     "Validation failed. Please check the form fields.": "Validasi gagal. Silakan periksa kembali isian formulir.",
     "Image is too large. Please use an image under 1MB.": "Ukuran gambar terlalu besar. Harap gunakan gambar di bawah 1MB.",
-    "Failed to process image: Failed to read the file.",
-    "Gagal memproses gambar: Gagal membaca berkas.",
+    "Failed to process image: Failed to read the file.": "Gagal memproses gambar: Gagal membaca berkas.",
     "Firestore Error: Failed to write document.": "Galat Firestore: Gagal menulis dokumen.",
     "Please select an image first.": "Harap pilih gambar terlebih dahulu.",
     "Could not identify breed. Please enter manually.": "Tidak dapat mengidentifikasi ras. Harap masukkan secara manual.",
