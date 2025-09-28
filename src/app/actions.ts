@@ -47,6 +47,16 @@ export async function addCat(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
+  
+  const catData = validatedFields.data;
+
+  if (!catData.latitude || !catData.longitude) {
+    return {
+      message: 'Please select a location on the map.',
+      success: false,
+      errors: { locationText: ['Please select a location on the map.'] },
+    };
+  }
 
   const imageFile = formData.get('image') as File | null;
   if (!imageFile || imageFile.size === 0) {
@@ -58,15 +68,6 @@ export async function addCat(
   }
 
   try {
-    const catData = validatedFields.data;
-     if (!catData.latitude || !catData.longitude) {
-      return {
-        message: 'Please select a location on the map.',
-        success: false,
-        errors: { locationText: ['Please select a location on the map.'] },
-      };
-    }
-
     // 1. Upload image to Firebase Storage
     const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
     const snapshot = await uploadBytes(storageRef, imageFile);
