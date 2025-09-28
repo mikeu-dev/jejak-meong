@@ -16,8 +16,8 @@ const catSchema = z.object({
   type: z.string().min(1, 'Type is required'),
   breed: z.string().min(1, 'Breed is required'),
   locationText: z.string().min(1, 'Location is required'),
-  latitude: z.coerce.number(),
-  longitude: z.coerce.number(),
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
 });
 
 export type FormState = {
@@ -32,36 +32,86 @@ export async function addCat(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  
-  // DIAGNOSTIC STEP: TRY TO WRITE A SIMPLE DOCUMENT
-  try {
-    console.log("Attempting to write a simple test document to Firestore...");
-    const docRef = await addDoc(collection(db, "cats"), {
-      name: "Test Cat",
-      breed: "Test Breed",
-      createdAt: serverTimestamp(),
-    });
-    console.log("Test document written with ID: ", docRef.id);
-    
-    // If we reach here, Firestore connection is working.
-    // We will return a success message for this test.
-    revalidatePath('/');
-    return { success: true, message: 'Firestore test write was successful!' };
+  console.log('addCat action started.');
 
-  } catch (e: any) {
-    console.error("!!! CRITICAL FIREBASE ERROR !!!", e);
-    
-    let errorMessage = 'Failed to add cat. An unexpected error occurred.';
-    if (e.message) {
-      errorMessage = `Critical Firestore Error: ${e.message}`;
+  const validatedFields = catSchema.safeParse({
+    name: formData.get('name'),
+    gender: formData.get('gender'),
+    type: formData.get('type'),
+    breed: formData.get('breed'),
+    locationText: formData.get('locationText'),
+    latitude: formData.get('latitude'),
+    longitude: formData.get('longitude'),
+  });
+
+  if (!validatedFields.success) {
+    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
+    return {
+      success: false,
+      message: 'Validation failed. Please check the form fields.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  
+  console.log('Step 1: Validation successful.');
+
+  const imageFile = formData.get('image') as File | null;
+  let imageUrl = '';
+
+  if (imageFile && imageFile.size > 0) {
+    console.log('Step 2: Image file found. Attempting to upload...');
+    try {
+      const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
+      const buffer = Buffer.from(await imageFile.arrayBuffer());
+      
+      const snapshot = await uploadBytes(storageRef, buffer, {
+        contentType: imageFile.type,
+      });
+      console.log('Image uploaded successfully. Snapshot:', snapshot);
+
+      imageUrl = await getDownloadURL(snapshot.ref);
+      console.log('Step 3: Got download URL:', imageUrl);
+    } catch (error: any) {
+      console.error('!!! FIREBASE STORAGE ERROR !!!', error);
+      let errorMessage = 'Failed to upload image.';
+       if (error.code === 'storage/unauthorized') {
+          errorMessage = 'Image upload failed. Check your Firebase Storage security rules. You may need to allow writes.';
+      } else if (error.message) {
+          errorMessage = `Image upload error: ${error.message}`;
+      }
+      return { success: false, message: errorMessage };
     }
+  } else {
+    console.log('Step 2 & 3: No image file provided, skipping upload.');
+  }
+
+  try {
+    console.log('Step 4: Attempting to write document to Firestore...');
+    const data = {
+      ...validatedFields.data,
+      imageUrl,
+      location: new GeoPoint(validatedFields.data.latitude, validatedFields.data.longitude),
+      createdAt: serverTimestamp(),
+    };
     
-    if (e.code === 'failed-precondition' || (e.message && e.message.includes('firestore/unavailable'))) {
-        errorMessage = 'Failed to add cat. Please ensure Firestore Database is enabled in your Firebase project console.';
-    } else if (e.code === 'permission-denied') {
-        errorMessage = 'Failed to add cat due to a permissions issue. Please check your Firestore security rules.';
+    // We don't need to store lat/lon separately as they are in the GeoPoint
+    delete (data as any).latitude;
+    delete (data as any).longitude;
+    
+    const docRef = await addDoc(collection(db, "cats"), data);
+    console.log('Step 5: Document written to Firestore with ID:', docRef.id);
+
+    revalidatePath('/');
+    return { success: true, message: 'Cat reported successfully!' };
+
+  } catch (error: any) {
+    console.error("!!! FIRESTORE WRITE ERROR !!!", error);
+    let errorMessage = 'Failed to save cat data. An unexpected error occurred.';
+    if (error.code === 'permission-denied' || error.message.includes('permission-denied')) {
+        errorMessage = 'Failed to save data. Please check your Firestore security rules.';
+    } else if (error.message) {
+        errorMessage = `Firestore Error: ${error.message}`;
     }
-    
     return { success: false, message: errorMessage };
   }
 }
