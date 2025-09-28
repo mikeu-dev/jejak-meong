@@ -1,3 +1,4 @@
+'use client';
 import { Plus, PawPrint, List, Map as MapIcon } from 'lucide-react';
 import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -8,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CatList } from '@/components/cat-list';
 import { CatMap } from '@/components/cat-map';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useLanguage } from '@/context/language-context';
+import { useEffect, useState } from 'react';
 
 async function getCats(): Promise<Cat[]> {
   try {
@@ -30,7 +34,7 @@ async function getCats(): Promise<Cat[]> {
         imageUrl: data.imageUrl,
         locationText: data.locationText,
         // The location object is now a plain object
-        location: { latitude, longitude }, 
+        location: { latitude, longitude },
         latitude, // Keep for direct access if needed
         longitude, // Keep for direct access if needed
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
@@ -42,9 +46,20 @@ async function getCats(): Promise<Cat[]> {
   }
 }
 
+export default function Home() {
+  const { t } = useLanguage();
+  const [cats, setCats] = useState<Cat[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function Home() {
-  const cats = await getCats();
+  useEffect(() => {
+    async function loadCats() {
+      setLoading(true);
+      const fetchedCats = await getCats();
+      setCats(fetchedCats);
+      setLoading(false);
+    }
+    loadCats();
+  }, []);
 
   return (
     <div className="flex flex-col h-svh w-screen">
@@ -52,15 +67,16 @@ export default async function Home() {
         <div className="flex items-center gap-3">
           <PawPrint className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold font-headline text-foreground">
-            Jejak Meong
+            {t('appName')}
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
           <AddCatSheet>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Report a Cat
+              {t('reportCatButton')}
             </Button>
           </AddCatSheet>
         </div>
@@ -69,8 +85,8 @@ export default async function Home() {
         <Tabs defaultValue="map" className="flex-1 flex flex-col">
           <div className="flex justify-center p-2 bg-background">
             <TabsList>
-              <TabsTrigger value="map"><MapIcon className="mr-2 h-4 w-4"/>Map View</TabsTrigger>
-              <TabsTrigger value="list"><List className="mr-2 h-4 w-4"/>List View</TabsTrigger>
+              <TabsTrigger value="map"><MapIcon className="mr-2 h-4 w-4"/>{t('mapView')}</TabsTrigger>
+              <TabsTrigger value="list"><List className="mr-2 h-4 w-4"/>{t('listView')}</TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="map" className="flex-1 -mt-2">

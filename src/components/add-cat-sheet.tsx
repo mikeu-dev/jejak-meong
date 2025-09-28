@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { AddCatForm } from "./add-cat-form";
 import { useState } from "react";
+import { useLanguage } from "@/context/language-context";
 
 type AddCatSheetProps = {
   children: React.ReactNode;
@@ -16,15 +17,16 @@ type AddCatSheetProps = {
 
 export function AddCatSheet({ children }: AddCatSheetProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Report a Missing or Found Cat</SheetTitle>
+          <SheetTitle>{t('sheetTitle')}</SheetTitle>
           <SheetDescription>
-            Fill in the details below to add a pin to the map. Let's help them find their way home.
+            {t('sheetDescription')}
           </SheetDescription>
         </SheetHeader>
         <AddCatForm onFormSuccess={() => setOpen(false)} />

@@ -6,17 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from './ui/badge';
 import { MapPin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { id, enUS } from 'date-fns/locale';
+import { useLanguage } from '@/context/language-context';
 
 type CatListProps = {
   cats: Cat[];
 };
 
 export function CatList({ cats }: CatListProps) {
+  const { locale, t } = useLanguage();
+  
+  const getGender = (gender: Cat['gender']) => {
+    switch (gender) {
+      case 'Male':
+        return t('genderMale');
+      case 'Female':
+        return t('genderFemale');
+      default:
+        return t('genderUnknown');
+    }
+  };
+
   if (cats.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-20">
-        <h2 className="text-2xl font-semibold">No Cats Reported Yet</h2>
-        <p>Be the first to report a missing or found cat in your area!</p>
+        <h2 className="text-2xl font-semibold">{t('noCatsReportedTitle')}</h2>
+        <p>{t('noCatsReportedDescription')}</p>
       </div>
     );
   }
@@ -36,7 +51,7 @@ export function CatList({ cats }: CatListProps) {
             <CardTitle className="text-xl font-bold mb-1">{cat.name}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">{cat.breed}</CardDescription>
             <div className="flex flex-wrap gap-2 mt-3">
-              <Badge variant="secondary">{cat.gender}</Badge>
+              <Badge variant="secondary">{getGender(cat.gender)}</Badge>
               <Badge variant="secondary">{cat.type}</Badge>
             </div>
           </CardContent>
@@ -46,7 +61,7 @@ export function CatList({ cats }: CatListProps) {
                 <span>{cat.locationText}</span>
              </div>
              <p className="text-xs text-muted-foreground w-full">
-                {cat.createdAt ? formatDistanceToNow(new Date(cat.createdAt), { addSuffix: true }) : 'A while ago'}
+                {cat.createdAt ? formatDistanceToNow(new Date(cat.createdAt), { addSuffix: true, locale: locale === 'id' ? id : enUS }) : t('aWhileAgo')}
              </p>
           </CardFooter>
         </Card>
