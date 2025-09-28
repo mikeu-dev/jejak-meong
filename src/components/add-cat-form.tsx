@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useEffect, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { Camera, Loader2, MapPin, X } from 'lucide-react';
+import { Camera, Loader2, X } from 'lucide-react';
 
 import { addCat, getBreedSuggestions, reverseGeocode } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ type AddCatFormProps = {
 };
 
 export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
-  const [formState, formAction] = useFormState(addCat, initialState);
+  const [formState, formAction] = useActionState(addCat, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
