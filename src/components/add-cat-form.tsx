@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Camera, Loader2, MapPin, X } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 import { addCat, getBreedSuggestions } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
+import { Textarea } from './ui/textarea';
 
 const initialState = {
   message: '',
@@ -40,7 +40,6 @@ type AddCatFormProps = {
 
 export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   const [formState, formAction] = useFormState(addCat, initialState);
-  const [location, setLocation] = useState({ lat: -6.2088, lng: 106.8456 }); // Default to Jakarta
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -64,12 +63,6 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
       }
     }
   }, [formState, toast, onFormSuccess]);
-
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      setLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-    }
-  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,9 +102,6 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
 
   return (
     <form ref={formRef} action={formAction} className="grid gap-6 py-4">
-      <input type="hidden" name="lat" value={location.lat} />
-      <input type="hidden" name="lng" value={location.lng} />
-
       <div className="space-y-2">
         <Label htmlFor="image-upload-button" className="text-sm font-medium">Cat Image</Label>
         <div className="w-full aspect-video rounded-md border border-dashed flex items-center justify-center relative bg-muted/50 overflow-hidden">
@@ -181,18 +171,13 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Last Seen Location</Label>
-        <div className="h-64 w-full rounded-md overflow-hidden relative border">
-          <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-            <Map mapId="add-cat-map" defaultCenter={location} defaultZoom={12} gestureHandling={'greedy'} onClick={handleMapClick} disableDefaultUI={true}>
-              <AdvancedMarker position={location} />
-            </Map>
-          </APIProvider>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 p-2 rounded-lg text-xs text-center backdrop-blur-sm shadow-md flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
-            <span>Click on the map to pin the location</span>
-          </div>
-        </div>
+        <Label htmlFor="locationText">Last Seen Location</Label>
+        <Textarea
+          id="locationText"
+          name="locationText"
+          placeholder="e.g. Near Indomaret, Jalan Sudirman, Jakarta"
+        />
+        {formState.errors?.locationText && <p className="text-sm font-medium text-destructive">{formState.errors.locationText[0]}</p>}
       </div>
       <SubmitButton />
     </form>

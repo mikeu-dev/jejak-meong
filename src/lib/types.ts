@@ -5,9 +5,6 @@ export interface Cat {
   type: string;
   breed: string;
   imageUrl: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
+  locationText: string;
   createdAt: string; // Using ISO string for serialization
 }

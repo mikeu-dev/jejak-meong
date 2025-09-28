@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 import { db, storage } from '@/lib/firebase';
 import { suggestCatBreedsFromImage } from '@/ai/flows/suggest-cat-breeds-from-image';
@@ -14,8 +13,7 @@ const catSchema = z.object({
   gender: z.enum(['Male', 'Female', 'Unknown']),
   type: z.string().min(1, 'Type is required'),
   breed: z.string().min(1, 'Breed is required'),
-  lat: z.coerce.number(),
-  lng: z.coerce.number(),
+  locationText: z.string().min(1, 'Location is required'),
 });
 
 export type FormState = {
@@ -35,8 +33,7 @@ export async function addCat(
     gender: formData.get('gender'),
     type: formData.get('type'),
     breed: formData.get('breed'),
-    lat: formData.get('lat'),
-    lng: formData.get('lng'),
+    locationText: formData.get('locationText'),
   });
 
   if (!validatedFields.success) {
@@ -57,7 +54,7 @@ export async function addCat(
   }
 
   try {
-    const { lat, lng, ...catData } = validatedFields.data;
+    const catData = validatedFields.data;
 
     // 1. Upload image to Firebase Storage
     const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
@@ -68,10 +65,6 @@ export async function addCat(
     await addDoc(collection(db, 'cats'), {
       ...catData,
       imageUrl,
-      location: {
-        lat: lat,
-        lng: lng,
-      },
       createdAt: serverTimestamp(),
     });
   } catch (e) {
