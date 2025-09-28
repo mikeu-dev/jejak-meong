@@ -80,7 +80,7 @@ export async function addCat(
       createdAt: serverTimestamp(),
     });
   } catch (e) {
-    console.error(e);
+    console.error("Error adding cat:", e);
     return { success: false, message: 'Failed to add cat. An unexpected error occurred.' };
   }
 
