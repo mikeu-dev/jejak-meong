@@ -59,7 +59,7 @@ export async function addCat(
   let imageUrl = '';
 
   if (imageFile && imageFile.size > 0) {
-    console.log('Step 2: Image file found. Attempting to upload...');
+    console.log('Step 2: Image file found. Attempting to upload to Firebase Storage...');
     try {
       const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
       const buffer = Buffer.from(await imageFile.arrayBuffer());
