@@ -13,27 +13,34 @@ async function getCats(): Promise<Cat[]> {
     const catsCollection = collection(db, 'cats');
     const q = query(catsCollection, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
-    
+
     return querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      // Firestore GeoPoint needs to be destructured for serialization
       const latitude = data.location?.latitude || 0;
       const longitude = data.location?.longitude || 0;
 
+      // Construct a plain object, excluding the original GeoPoint
       return {
         id: doc.id,
-        ...data,
-        latitude,
-        longitude,
+        name: data.name,
+        gender: data.gender,
+        type: data.type,
+        breed: data.breed,
+        imageUrl: data.imageUrl,
+        locationText: data.locationText,
+        // The location object is now a plain object
+        location: { latitude, longitude }, 
+        latitude, // Keep for direct access if needed
+        longitude, // Keep for direct access if needed
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
-      } as unknown as Cat;
+      } as Cat;
     });
   } catch (error) {
     console.error('Error fetching cats from Firestore:', error);
-    // Return empty array to prevent app crash, but log the error
     return [];
   }
 }
+
 
 export default async function Home() {
   const cats = await getCats();
