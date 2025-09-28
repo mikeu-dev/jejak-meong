@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CatList } from '@/components/cat-list';
 import { CatMap } from '@/components/cat-map';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 async function getCats(): Promise<Cat[]> {
   try {
@@ -54,12 +55,15 @@ export default async function Home() {
             Jejak Meong
           </h1>
         </div>
-        <AddCatSheet>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Report a Cat
-          </Button>
-        </AddCatSheet>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <AddCatSheet>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Report a Cat
+            </Button>
+          </AddCatSheet>
+        </div>
       </header>
       <main className="flex-1 flex flex-col">
         <Tabs defaultValue="map" className="flex-1 flex flex-col">
