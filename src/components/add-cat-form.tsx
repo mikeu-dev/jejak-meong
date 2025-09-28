@@ -121,6 +121,10 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
 
   return (
     <form ref={formRef} action={(formData) => {
+      if (location) {
+        formData.set('latitude', String(location.lat));
+        formData.set('longitude', String(location.lon));
+      }
       console.log('Client-side form data:');
       for (const [key, value] of formData.entries()) {
         console.log(`${key}:`, value);
@@ -206,7 +210,7 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
           name="locationText"
           ref={locationTextRef}
           placeholder="Click on the map to select a location..."
-          readOnly={!isGeocoding}
+          readOnly={isGeocoding}
           className="mt-2"
         />
         {formState.errors?.locationText && <p className="text-sm font-medium text-destructive">{formState.errors.locationText[0]}</p>}
