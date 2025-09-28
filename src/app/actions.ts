@@ -1,13 +1,10 @@
 'use server';
 
 import { z } from 'zod';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { addDoc, collection, serverTimestamp, GeoPoint } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
-import { GeoPoint } from 'firebase/firestore';
 
-
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { suggestCatBreedsFromImage } from '@/ai/flows/suggest-cat-breeds-from-image';
 
 const catSchema = z.object({
@@ -28,6 +25,13 @@ export type FormState = {
   };
 };
 
+// Helper function to convert a File to a data URI
+async function fileToDataUri(file: File): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return `data:${file.type};base64,${buffer.toString('base64')}`;
+}
+
+
 export async function addCat(
   prevState: FormState,
   formData: FormData
@@ -45,60 +49,52 @@ export async function addCat(
   });
 
   if (!validatedFields.success) {
-    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
+    const errors = validatedFields.error.flatten().fieldErrors;
+    console.error('Validation failed:', errors);
     return {
       success: false,
       message: 'Validation failed. Please check the form fields.',
-      errors: validatedFields.error.flatten().fieldErrors,
+      errors: errors,
     };
   }
-  
+
   console.log('Step 1: Validation successful.');
 
   const imageFile = formData.get('image') as File | null;
   let imageUrl = '';
 
   if (imageFile && imageFile.size > 0) {
-    console.log('Step 2: Image file found. Attempting to upload to Firebase Storage...');
+    console.log('Step 2: Image file found. Converting to data URI...');
     try {
-      const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      
-      const snapshot = await uploadBytes(storageRef, buffer, {
-        contentType: imageFile.type,
-      });
-      console.log('Image uploaded successfully. Snapshot:', snapshot);
-
-      imageUrl = await getDownloadURL(snapshot.ref);
-      console.log('Step 3: Got download URL:', imageUrl);
-    } catch (error: any) {
-      console.error('!!! FIREBASE STORAGE ERROR !!!', error);
-      let errorMessage = 'Failed to upload image.';
-       if (error.code === 'storage/unauthorized') {
-          errorMessage = 'Image upload failed. Check your Firebase Storage security rules. You may need to allow writes.';
-      } else if (error.message) {
-          errorMessage = `Image upload error: ${error.message}`;
+      // Firestore has a 1MB limit per document. We should warn if the image is too large.
+      // This is a basic check. A real app should resize the image on the client.
+      if (imageFile.size > 1024 * 1024) {
+          return { success: false, message: 'Image is too large. Please use an image under 1MB.' };
       }
-      return { success: false, message: errorMessage };
+      imageUrl = await fileToDataUri(imageFile);
+      console.log('Step 3: Image converted to data URI successfully.');
+    } catch (error: any) {
+      console.error('!!! IMAGE CONVERSION ERROR !!!', error);
+      return { success: false, message: `Failed to process image: ${error.message}` };
     }
   } else {
-    console.log('Step 2 & 3: No image file provided, skipping upload.');
+    console.log('Step 2 & 3: No image file provided, skipping.');
   }
 
   try {
     console.log('Step 4: Attempting to write document to Firestore...');
-    const data = {
-      ...validatedFields.data,
-      imageUrl,
+    const catData = {
+      name: validatedFields.data.name,
+      gender: validatedFields.data.gender,
+      type: validatedFields.data.type,
+      breed: validatedFields.data.breed,
+      locationText: validatedFields.data.locationText,
+      imageUrl: imageUrl, // Storing data URI
       location: new GeoPoint(validatedFields.data.latitude, validatedFields.data.longitude),
       createdAt: serverTimestamp(),
     };
     
-    // We don't need to store lat/lon separately as they are in the GeoPoint
-    delete (data as any).latitude;
-    delete (data as any).longitude;
-    
-    const docRef = await addDoc(collection(db, "cats"), data);
+    const docRef = await addDoc(collection(db, "cats"), catData);
     console.log('Step 5: Document written to Firestore with ID:', docRef.id);
 
     revalidatePath('/');
@@ -107,7 +103,7 @@ export async function addCat(
   } catch (error: any) {
     console.error("!!! FIRESTORE WRITE ERROR !!!", error);
     let errorMessage = 'Failed to save cat data. An unexpected error occurred.';
-    if (error.code === 'permission-denied' || error.message.includes('permission-denied')) {
+    if (error.code === 'permission-denied') {
         errorMessage = 'Failed to save data. Please check your Firestore security rules.';
     } else if (error.message) {
         errorMessage = `Firestore Error: ${error.message}`;
@@ -124,9 +120,7 @@ export async function getBreedSuggestions(formData: FormData): Promise<{ suggest
   }
 
   try {
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const catImageDataUri = `data:${imageFile.type};base64,${buffer.toString('base64')}`;
-
+    const catImageDataUri = await fileToDataUri(imageFile);
     const result = await suggestCatBreedsFromImage({ catImageDataUri });
 
     if (result.suggestedBreeds && result.suggestedBreeds.length > 0) {
