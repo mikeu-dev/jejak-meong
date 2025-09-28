@@ -32,82 +32,38 @@ export async function addCat(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const validatedFields = catSchema.safeParse({
-    name: formData.get('name'),
-    gender: formData.get('gender'),
-    type: formData.get('type'),
-    breed: formData.get('breed'),
-    locationText: formData.get('locationText'),
-    latitude: formData.get('latitude'),
-    longitude: formData.get('longitude'),
-  });
-
-  if (!validatedFields.success) {
-    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
-    return {
-      message: 'Please correct the errors below.',
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
   
-  const catData = validatedFields.data;
-
-  if (!catData.latitude || !catData.longitude || !catData.locationText) {
-    const errors: FormState['errors'] = {};
-    if (!catData.latitude || !catData.longitude) {
-        errors.locationText = ['Please select a location on the map.'];
-    }
-    if (!catData.locationText) {
-        errors.locationText = [...(errors.locationText || []), 'Location description cannot be empty.'];
-    }
-    return {
-      message: 'Location is not complete.',
-      success: false,
-      errors,
-    };
-  }
-
-  const imageFile = formData.get('image') as File | null;
-  if (!imageFile || imageFile.size === 0) {
-    return {
-      message: 'An image of the cat is required.',
-      success: false,
-      errors: { image: ['Please upload an image.'] },
-    };
-  }
-
+  // DIAGNOSTIC STEP: TRY TO WRITE A SIMPLE DOCUMENT
   try {
-    // 1. Upload image to Firebase Storage
-    const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
-    const snapshot = await uploadBytes(storageRef, imageFile);
-    const imageUrl = await getDownloadURL(snapshot.ref);
-
-    // 2. Prepare data for Firestore, separating GeoPoint
-    const { latitude, longitude, ...restOfCatData } = catData;
-    const dataToSave = {
-      ...restOfCatData,
-      imageUrl,
-      location: new GeoPoint(latitude, longitude),
+    console.log("Attempting to write a simple test document to Firestore...");
+    const docRef = await addDoc(collection(db, "cats"), {
+      name: "Test Cat",
+      breed: "Test Breed",
       createdAt: serverTimestamp(),
-    };
-
-    // 3. Add cat data to Firestore
-    await addDoc(collection(db, 'cats'), dataToSave);
+    });
+    console.log("Test document written with ID: ", docRef.id);
+    
+    // If we reach here, Firestore connection is working.
+    // We will return a success message for this test.
+    revalidatePath('/');
+    return { success: true, message: 'Firestore test write was successful!' };
 
   } catch (e: any) {
-    console.error("Error adding cat:", e);
+    console.error("!!! CRITICAL FIREBASE ERROR !!!", e);
+    
     let errorMessage = 'Failed to add cat. An unexpected error occurred.';
+    if (e.message) {
+      errorMessage = `Critical Firestore Error: ${e.message}`;
+    }
+    
     if (e.code === 'failed-precondition' || (e.message && e.message.includes('firestore/unavailable'))) {
         errorMessage = 'Failed to add cat. Please ensure Firestore Database is enabled in your Firebase project console.';
     } else if (e.code === 'permission-denied') {
         errorMessage = 'Failed to add cat due to a permissions issue. Please check your Firestore security rules.';
     }
+    
     return { success: false, message: errorMessage };
   }
-
-  revalidatePath('/');
-  return { success: true, message: 'Cat reported successfully!' };
 }
 
 export async function getBreedSuggestions(formData: FormData): Promise<{ suggestions: string[]; error?: string }> {
@@ -124,7 +80,7 @@ export async function getBreedSuggestions(formData: FormData): Promise<{ suggest
     const result = await suggestCatBreedsFromImage({ catImageDataUri });
 
     if (result.suggestedBreeds && result.suggestedBreeds.length > 0) {
-      return { suggestions: result.suggestions };
+      return { suggestions: result.suggestedBreeds };
     } else {
       return { suggestions: [], error: 'Could not identify breed. Please enter manually.' };
     }
