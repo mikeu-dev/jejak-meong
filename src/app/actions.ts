@@ -57,6 +57,8 @@ export async function addCat(
   }
 
   try {
+    const { lat, lng, ...catData } = validatedFields.data;
+
     // 1. Upload image to Firebase Storage
     const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
     const snapshot = await uploadBytes(storageRef, imageFile);
@@ -64,11 +66,11 @@ export async function addCat(
 
     // 2. Add cat data to Firestore
     await addDoc(collection(db, 'cats'), {
-      ...validatedFields.data,
+      ...catData,
       imageUrl,
       location: {
-        lat: validatedFields.data.lat,
-        lng: validatedFields.data.lng,
+        lat: lat,
+        lng: lng,
       },
       createdAt: serverTimestamp(),
     });
