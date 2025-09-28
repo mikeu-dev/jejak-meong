@@ -30,6 +30,7 @@ async function getCats(): Promise<Cat[]> {
     });
   } catch (error) {
     console.error('Error fetching cats from Firestore:', error);
+    // Return empty array to prevent app crash, but log the error
     return [];
   }
 }
