@@ -120,7 +120,13 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   }
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-6 py-4">
+    <form ref={formRef} action={(formData) => {
+      console.log('Client-side form data:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+      formAction(formData);
+    }} className="grid gap-6 py-4">
       <input type="hidden" name="latitude" value={location?.lat ?? ''} />
       <input type="hidden" name="longitude" value={location?.lon ?? ''} />
 
