@@ -16,9 +16,15 @@ async function getCats(): Promise<Cat[]> {
     
     return querySnapshot.docs.map((doc) => {
       const data = doc.data();
+      // Firestore GeoPoint needs to be destructured for serialization
+      const latitude = data.location?.latitude || 0;
+      const longitude = data.location?.longitude || 0;
+
       return {
         id: doc.id,
         ...data,
+        latitude,
+        longitude,
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
       } as unknown as Cat;
     });

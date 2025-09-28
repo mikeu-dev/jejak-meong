@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
+import { GeoPoint } from 'firebase/firestore';
+
 
 import { db, storage } from '@/lib/firebase';
 import { suggestCatBreedsFromImage } from '@/ai/flows/suggest-cat-breeds-from-image';
@@ -50,11 +52,18 @@ export async function addCat(
   
   const catData = validatedFields.data;
 
-  if (!catData.latitude || !catData.longitude) {
+  if (!catData.latitude || !catData.longitude || !catData.locationText) {
+    const errors: FormState['errors'] = {};
+    if (!catData.latitude || !catData.longitude) {
+        errors.locationText = ['Please select a location on the map.'];
+    }
+    if (!catData.locationText) {
+        errors.locationText = [...(errors.locationText || []), 'Location description cannot be empty.'];
+    }
     return {
-      message: 'Please select a location on the map.',
+      message: 'Location is not complete.',
       success: false,
-      errors: { locationText: ['Please select a location on the map.'] },
+      errors,
     };
   }
 
@@ -74,11 +83,14 @@ export async function addCat(
     const imageUrl = await getDownloadURL(snapshot.ref);
 
     // 2. Add cat data to Firestore
+    const { latitude, longitude, ...restOfCatData } = catData;
     await addDoc(collection(db, 'cats'), {
-      ...catData,
+      ...restOfCatData,
+      location: new GeoPoint(latitude, longitude),
       imageUrl,
       createdAt: serverTimestamp(),
     });
+
   } catch (e) {
     console.error("Error adding cat:", e);
     return { success: false, message: 'Failed to add cat. An unexpected error occurred.' };
