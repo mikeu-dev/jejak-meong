@@ -14,6 +14,8 @@ const catSchema = z.object({
   type: z.string().min(1, 'Type is required'),
   breed: z.string().min(1, 'Breed is required'),
   locationText: z.string().min(1, 'Location is required'),
+  latitude: z.coerce.number(),
+  longitude: z.coerce.number(),
 });
 
 export type FormState = {
@@ -34,6 +36,8 @@ export async function addCat(
     type: formData.get('type'),
     breed: formData.get('breed'),
     locationText: formData.get('locationText'),
+    latitude: formData.get('latitude'),
+    longitude: formData.get('longitude'),
   });
 
   if (!validatedFields.success) {
@@ -55,6 +59,13 @@ export async function addCat(
 
   try {
     const catData = validatedFields.data;
+     if (!catData.latitude || !catData.longitude) {
+      return {
+        message: 'Please select a location on the map.',
+        success: false,
+        errors: { locationText: ['Please select a location on the map.'] },
+      };
+    }
 
     // 1. Upload image to Firebase Storage
     const storageRef = ref(storage, `cats/${Date.now()}-${imageFile.name}`);
@@ -97,5 +108,22 @@ export async function getBreedSuggestions(formData: FormData): Promise<{ suggest
   } catch (error) {
     console.error('Error getting breed suggestions:', error);
     return { suggestions: [], error: 'An error occurred while suggesting breeds.' };
+  }
+}
+
+export async function reverseGeocode(lat: number, lon: number): Promise<{ address?: string; error?: string }> {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch address');
+    }
+    const data = await response.json();
+    if (data && data.display_name) {
+      return { address: data.display_name };
+    }
+    return { error: 'Could not find address for the selected location.' };
+  } catch (error) {
+    console.error('Reverse geocoding error:', error);
+    return { error: 'Failed to get address from location.' };
   }
 }

@@ -5,7 +5,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Camera, Loader2, MapPin, X } from 'lucide-react';
 
-import { addCat, getBreedSuggestions } from '@/app/actions';
+import { addCat, getBreedSuggestions, reverseGeocode } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
+import { LocationPicker } from './location-picker';
 
 const initialState = {
   message: '',
@@ -43,10 +44,13 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const breedInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const locationTextRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (formState.message) {
@@ -59,10 +63,25 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
         formRef.current?.reset();
         setImagePreview(null);
         setBreedSuggestions([]);
+        setLocation(null);
         onFormSuccess();
       }
     }
   }, [formState, toast, onFormSuccess]);
+  
+  const handleLocationSelect = async (coords: { lat: number; lon: number }) => {
+    setLocation(coords);
+    setIsGeocoding(true);
+    if(locationTextRef.current) locationTextRef.current.value = 'Fetching address...';
+    const result = await reverseGeocode(coords.lat, coords.lon);
+    setIsGeocoding(false);
+    if (result.address && locationTextRef.current) {
+      locationTextRef.current.value = result.address;
+    } else if (result.error) {
+      if(locationTextRef.current) locationTextRef.current.value = '';
+      toast({ title: 'Location Error', description: result.error, variant: 'destructive' });
+    }
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,6 +121,9 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
 
   return (
     <form ref={formRef} action={formAction} className="grid gap-6 py-4">
+      <input type="hidden" name="latitude" value={location?.lat ?? ''} />
+      <input type="hidden" name="longitude" value={location?.lon ?? ''} />
+
       <div className="space-y-2">
         <Label htmlFor="image-upload-button" className="text-sm font-medium">Cat Image</Label>
         <div className="w-full aspect-video rounded-md border border-dashed flex items-center justify-center relative bg-muted/50 overflow-hidden">
@@ -171,11 +193,15 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="locationText">Last Seen Location</Label>
+        <Label>Last Seen Location</Label>
+        <LocationPicker onLocationSelect={handleLocationSelect} />
         <Textarea
           id="locationText"
           name="locationText"
-          placeholder="e.g. Near Indomaret, Jalan Sudirman, Jakarta"
+          ref={locationTextRef}
+          placeholder="Click on the map to select a location..."
+          readOnly={!isGeocoding}
+          className="mt-2"
         />
         {formState.errors?.locationText && <p className="text-sm font-medium text-destructive">{formState.errors.locationText[0]}</p>}
       </div>
