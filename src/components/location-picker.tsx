@@ -9,7 +9,7 @@ import { Feature } from 'ol';
 import { Point } from 'ol/geom';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
-import { Style, Icon } from 'ol/style';
+import { Style, Icon, Circle, Fill, Stroke } from 'ol/style';
 import { useEffect, useRef } from 'react';
 
 type LocationPickerProps = {
@@ -55,12 +55,11 @@ export function LocationPicker({ onLocationSelect }: LocationPickerProps) {
           geometry: new Point(evt.coordinate),
         });
         markerRef.current.setStyle(new Style({
-          image: new Icon({
-            anchor: [0.5, 46],
-            anchorXUnits: 'fraction',
-            anchorYUnits: 'pixels',
-            src: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-          })
+            image: new Circle({
+                radius: 8,
+                fill: new Fill({color: 'rgba(255, 255, 255, 0.7)'}),
+                stroke: new Stroke({color: 'hsl(var(--primary))', width: 3})
+            })
         }));
         vectorSourceRef.current?.addFeature(markerRef.current);
       } else {

@@ -37,12 +37,12 @@ export function CatMap({ cats }: CatMapProps) {
 
             feature.setStyle(new Style({
                 image: new Icon({
-                    anchor: [0.5, 46],
+                    anchor: [0.5, 0.5],
                     anchorXUnits: 'fraction',
-                    anchorYUnits: 'pixels',
-                    src: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                    scale: 1
-                })
+                    anchorYUnits: 'fraction',
+                    src: cat.imageUrl,
+                    scale: 0.1, // Start small
+                }),
             }));
             
             return feature;
@@ -54,6 +54,16 @@ export function CatMap({ cats }: CatMapProps) {
 
         const vectorLayer = new VectorLayer({
             source: vectorSource,
+             style: (feature) => {
+                const cat = feature.get('catData') as Cat;
+                return new Style({
+                    image: new CircleStyle({
+                        radius: 30,
+                        fill: new Fill({ color: '#ffffff' }),
+                        stroke: new Stroke({ color: 'hsl(var(--primary))', width: 3 }),
+                    }),
+                });
+            },
         });
         
         const jakartaCoords = fromLonLat([106.8456, -6.2088]);
@@ -73,6 +83,31 @@ export function CatMap({ cats }: CatMapProps) {
             controls: [],
         });
         
+        cats.forEach(cat => {
+            if (!cat.imageUrl || !mapInstance.current) return;
+
+            const markerElement = document.createElement('div');
+            markerElement.className = 'w-16 h-16 rounded-full overflow-hidden border-4 border-primary/80 bg-background shadow-lg cursor-pointer transform hover:scale-110 transition-transform';
+            markerElement.innerHTML = `<img src="${cat.imageUrl}" alt="${cat.name}" class="w-full h-full object-cover" />`;
+            
+            const point = new Point(fromLonLat([cat.longitude, cat.latitude]));
+
+            const feature = new Feature({
+                geometry: point,
+                catData: cat,
+            });
+            
+            feature.setStyle(new Style({
+                image: new Icon({
+                    anchor: [0.5, 0.5],
+                    img: markerElement,
+                    imgSize: [64, 64]
+                }),
+            }));
+
+            vectorSource.addFeature(feature);
+        });
+
         mapInstance.current.on('click', function(evt) {
             const feature = mapInstance.current?.forEachFeatureAtPixel(evt.pixel, function(feature) {
                 return feature;
@@ -114,16 +149,18 @@ export function CatMap({ cats }: CatMapProps) {
                             style={{
                                 position: 'absolute',
                                 left: `${mapInstance.current?.getPixelFromCoordinate(popoverCoordinates)[0]}px`,
-                                top: `${mapInstance.current?.getPixelFromCoordinate(popoverCoordinates)[1]}px`,
+                                top: `${mapInstance.current?.getPixelFromCoordinate(popoverCoordinates)[1] + 40}px`,
                                 transform: 'translate(-50%, -100%)',
                             }}
                         />
                     </PopoverTrigger>
                     <PopoverContent className="w-80" onOpenAutoFocus={(e) => e.preventDefault()}>
                         <div className="grid gap-4">
-                            <div className="aspect-video relative rounded-md overflow-hidden bg-muted">
-                                {selectedCat.imageUrl && <Image src={selectedCat.imageUrl} alt={selectedCat.name} fill className="object-cover" />}
-                            </div>
+                             {selectedCat.imageUrl && (
+                                <div className="aspect-video relative rounded-md overflow-hidden bg-muted">
+                                    <Image src={selectedCat.imageUrl} alt={selectedCat.name} fill className="object-cover" />
+                                </div>
+                            )}
                             <div className="space-y-1">
                                 <h3 className="text-lg font-bold">{selectedCat.name}</h3>
                                 <p className="text-sm text-muted-foreground">{selectedCat.breed}</p>
