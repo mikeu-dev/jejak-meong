@@ -1,4 +1,3 @@
-
 {
   "appName": "Jejak Meong",
   "reportCatButton": "Lapor Kucing",
@@ -36,6 +35,8 @@
   "aWhileAgo": "Beberapa waktu lalu",
   "toggleTheme": "Ganti tema",
   "toggleLanguage": "Ganti bahasa",
+  "loginButton": "Masuk dengan Google",
+  "logoutButton": "Keluar",
   "errors": {
     "Name is required": "Nama wajib diisi",
     "Type is required": "Jenis wajib diisi",

@@ -35,6 +35,8 @@
   "aWhileAgo": "A while ago",
   "toggleTheme": "Toggle theme",
   "toggleLanguage": "Change language",
+  "loginButton": "Login with Google",
+  "logoutButton": "Logout",
   "errors": {
     "Name is required": "Name is required",
     "Type is required": "Type is required",

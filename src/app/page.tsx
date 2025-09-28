@@ -12,6 +12,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useLanguage } from '@/context/language-context';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/auth-context';
+import { AuthButton } from '@/components/auth-button';
 
 async function getCats(): Promise<Cat[]> {
   try {
@@ -48,6 +50,7 @@ async function getCats(): Promise<Cat[]> {
 
 export default function Home() {
   const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,12 +76,7 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <ThemeToggle />
-          <AddCatSheet>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('reportCatButton')}
-            </Button>
-          </AddCatSheet>
+          <AuthButton />
         </div>
       </header>
       <main className="flex-1 flex flex-col">
