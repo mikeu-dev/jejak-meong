@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidSize() {
+      // Max 5MB per image
+      return request.resource.size <= 5 * 1024 * 1024;
+    }
+    
+    // Cat images
+    match /cats/{catId}/{imageId} {
+      // Anyone can read images
+      allow read: if true;
+      
+      // Anyone can upload images (with validation)
+      allow create: if isImage() && isValidSize();
+      
+      // Only authenticated users can update/delete (for future features)
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // User profile images (for future features)
+    match /users/{userId}/profile/{imageId} {
+      allow read: if true;
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isImage() 
+        && isValidSize();
+    }
+    
+    // Temporary uploads (auto-delete after 24 hours)
+    match /temp/{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -15,6 +15,8 @@ const catSchema = z.object({
   locationText: z.string().min(1, 'Location is required'),
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
+  imageUrl: z.string().url().optional(),
+  imageUrls: z.array(z.string().url()).max(5).optional(),
 });
 
 export type FormState = {
@@ -40,6 +42,17 @@ export async function addCat(
 ): Promise<FormState> {
   console.log('addCat action started.');
 
+  // Parse imageUrls from JSON string if present
+  const imageUrlsRaw = formData.get('imageUrls');
+  let imageUrls: string[] | undefined;
+  if (imageUrlsRaw && typeof imageUrlsRaw === 'string') {
+    try {
+      imageUrls = JSON.parse(imageUrlsRaw);
+    } catch (e) {
+      console.error('Failed to parse imageUrls:', e);
+    }
+  }
+
   const validatedFields = catSchema.safeParse({
     name: formData.get('name'),
     gender: formData.get('gender'),
@@ -48,6 +61,8 @@ export async function addCat(
     locationText: formData.get('locationText'),
     latitude: formData.get('latitude'),
     longitude: formData.get('longitude'),
+    imageUrl: formData.get('imageUrl') || undefined,
+    imageUrls: imageUrls,
   });
 
   if (!validatedFields.success) {
@@ -62,42 +77,28 @@ export async function addCat(
 
   console.log('Step 1: Validation successful.');
 
-  const imageFile = formData.get('image') as File | null;
-  let imageUrl = '';
-
-  if (imageFile && imageFile.size > 0) {
-    console.log('Step 2: Image file found. Converting to data URI...');
-    try {
-      // Firestore has a 1MB limit per document
-      // Client should compress image before upload (handled in form component)
-      if (imageFile.size > 1024 * 1024) {
-        return { success: false, message: 'Image is too large. Please use an image under 1MB.' };
-      }
-      imageUrl = await fileToDataUri(imageFile);
-      console.log('Step 3: Image converted to data URI successfully.');
-    } catch (error: any) {
-      console.error('!!! IMAGE CONVERSION ERROR !!!', error);
-      return { success: false, message: `Failed to process image: ${error.message}` };
-    }
-  } else {
-    console.log('Step 2 & 3: No image file provided, skipping.');
-  }
-
   try {
-    console.log('Step 4: Attempting to write document to Firestore...');
-    const catData = {
+    console.log('Step 2: Attempting to write document to Firestore...');
+    const catData: any = {
       name: validatedFields.data.name,
       gender: validatedFields.data.gender,
       type: validatedFields.data.type,
       breed: validatedFields.data.breed,
       locationText: validatedFields.data.locationText,
-      imageUrl: imageUrl, // Storing data URI
       location: new GeoPoint(validatedFields.data.latitude, validatedFields.data.longitude),
       createdAt: serverTimestamp(),
     };
 
+    // Add image URLs if present
+    if (validatedFields.data.imageUrl) {
+      catData.imageUrl = validatedFields.data.imageUrl;
+    }
+    if (validatedFields.data.imageUrls && validatedFields.data.imageUrls.length > 0) {
+      catData.imageUrls = validatedFields.data.imageUrls;
+    }
+
     const docRef = await addDoc(collection(db, "cats"), catData);
-    console.log('Step 5: Document written to Firestore with ID:', docRef.id);
+    console.log('Step 3: Document written to Firestore with ID:', docRef.id);
 
     revalidatePath('/');
     return { success: true, message: 'Cat reported successfully!' };
