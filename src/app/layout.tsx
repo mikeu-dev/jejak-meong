@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/context/language-context';
 import { AuthProvider } from '@/context/auth-context';
 import { StructuredData } from '@/components/structured-data';
+import { CookieConsent } from '@/components/CookieConsent';
 
 export const metadata: Metadata = {
   title: {
@@ -89,6 +90,7 @@ export default function RootLayout({
             >
               {children}
               <Toaster />
+              <CookieConsent />
             </ThemeProvider>
           </LanguageProvider>
         </AuthProvider>
@@ -96,3 +98,4 @@ export default function RootLayout({
     </html>
   );
 }
+

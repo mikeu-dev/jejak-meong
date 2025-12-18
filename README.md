@@ -1,62 +1,171 @@
-# Jejak Meong
+<div align="center">
 
-Jejak Meong adalah aplikasi web untuk membantu menemukan dan melaporkan kucing yang hilang atau ditemukan di sekitar Anda. Aplikasi ini menampilkan laporan pada peta interaktif dan juga dalam format daftar, memudahkan komunitas untuk saling membantu menemukan kembali teman berbulu mereka.
+# 🐱 Jejak Meong
 
-## Fitur Utama
+**Platform Komunitas untuk Menemukan Kucing Hilang**
 
-- **Peta Interaktif:** Lihat laporan kucing yang hilang atau ditemukan berdasarkan lokasi geografis mereka menggunakan OpenLayers.
-- **Tampilan Daftar:** Jelajahi semua laporan dalam format kartu yang mudah dibaca.
-- **Pelaporan Kucing:** Pengguna yang sudah login dapat melaporkan kucing baru dengan detail seperti nama, jenis kelamin, foto, dan lokasi terakhir terlihat.
-- **Login dengan Google:** Sistem autentikasi yang aman menggunakan Firebase Authentication.
-- **Saran Ras Berbasis AI:** Unggah foto kucing dan dapatkan saran ras menggunakan Google AI (Gemini) melalui Genkit.
-- **Dukungan Multibahasa:** Antarmuka tersedia dalam Bahasa Indonesia (default) dan Inggris.
-- **Mode Gelap/Terang:** Tombol untuk mengganti tema sesuai preferensi pengguna.
-- **Desain Responsif:** Tampilan yang optimal di perangkat desktop maupun mobile.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/jejak-meong)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15.3-black)](https://nextjs.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-11.9-orange)](https://firebase.google.com/)
 
-## Teknologi yang Digunakan
+[Demo](https://jejak-meong.vercel.app) • [Dokumentasi](docs/USER_GUIDE.md) • [Laporkan Bug](https://github.com/yourusername/jejak-meong/issues)
 
-- **Framework:** [Next.js](https://nextjs.org/) (dengan App Router)
-- **Database:** [Cloud Firestore](https://firebase.google.com/docs/firestore)
-- **Autentikasi:** [Firebase Authentication](https://firebase.google.com/docs/auth)
-- **AI/Generative:** [Genkit (Google AI)](https://firebase.google.com/docs/genkit)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **Komponen UI:** [shadcn/ui](https://ui.shadcn.com/)
-- **Peta:** [OpenLayers](https://openlayers.org/)
-- **Bahasa:** TypeScript
+</div>
 
-## Pengaturan & Menjalankan Lokal
+---
 
-Untuk menjalankan proyek ini di lingkungan lokal Anda, ikuti langkah-langkah berikut:
+## 📖 Tentang Jejak Meong
 
-1.  **Clone Repositori:**
-    ```bash
-    git clone <URL_REPOSITORI_ANDA>
-    cd <NAMA_DIREKTORI>
-    ```
+**Jejak Meong** adalah aplikasi web yang membantu komunitas pecinta kucing untuk melaporkan dan menemukan kucing yang hilang atau ditemukan di sekitar mereka. Dengan tampilan peta interaktif dan fitur AI untuk identifikasi ras kucing, kami membuat proses pencarian menjadi lebih mudah dan efektif.
 
-2.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+### ✨ Fitur Utama
 
-3.  **Siapkan Environment Variables:**
-    Buat file baru bernama `.env.local` di direktori root proyek Anda. Salin konten dari file `.env` (jika ada) atau mulai dari awal. Anda perlu menambahkan konfigurasi Firebase Anda ke file ini. Anda bisa mendapatkan nilai-nilai ini dari Firebase Console.
+- 🗺️ **Peta Interaktif** - Lihat laporan kucing berdasarkan lokasi geografis menggunakan OpenLayers
+- 📝 **Pelaporan Mudah** - Laporkan kucing hilang/ditemukan dengan foto dan detail lokasi
+- 🤖 **AI Breed Detection** - Identifikasi ras kucing otomatis menggunakan Google AI (Gemini)
+- 🔐 **Login Aman** - Autentikasi dengan Google melalui Firebase
+- 🌍 **Multibahasa** - Tersedia dalam Bahasa Indonesia dan Inggris
+- 🌓 **Dark Mode** - Tema gelap untuk kenyamanan mata
+- 📱 **Responsive Design** - Optimal di desktop dan mobile
+- 📲 **PWA Ready** - Install sebagai aplikasi di perangkat Anda
 
-    ```env
-    NEXT_PUBLIC_FIREBASE_API_KEY=AIz...
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
-    NEXT_PUBLIC_FIREBASE_APP_ID=...
+## 🚀 Quick Start
 
-    # Diperlukan untuk fitur AI (saran ras)
-    GEMINI_API_KEY=AIz...
-    ```
+### Prasyarat
 
-4.  **Jalankan Aplikasi:**
-    ```bash
-    npm run dev
-    ```
+- Node.js 20.x atau lebih baru
+- npm atau yarn
+- Akun Firebase (gratis)
+- Google AI API Key (gratis)
 
-    Aplikasi sekarang akan berjalan di `http://localhost:9002`.
+### Instalasi
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/yourusername/jejak-meong.git
+   cd jejak-meong
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Setup Environment Variables**
+   
+   Salin file `.env.example` menjadi `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Kemudian isi dengan konfigurasi Firebase dan Google AI Anda:
+   ```env
+   # Firebase Configuration
+   NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   
+   # Google AI (Genkit)
+   GOOGLE_GENAI_API_KEY=your-google-ai-key
+   ```
+
+4. **Jalankan Development Server**
+   ```bash
+   npm run dev
+   ```
+   
+   Buka [http://localhost:9002](http://localhost:9002) di browser Anda.
+
+## 📚 Dokumentasi
+
+- [User Guide](docs/USER_GUIDE.md) - Panduan lengkap untuk pengguna
+- [API Documentation](docs/API.md) - Dokumentasi API
+- [Components](docs/COMPONENTS.md) - Dokumentasi komponen
+- [Testing Guide](docs/TESTING.md) - Panduan testing
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) dengan App Router
+- **Database**: [Cloud Firestore](https://firebase.google.com/docs/firestore)
+- **Authentication**: [Firebase Auth](https://firebase.google.com/docs/auth)
+- **AI/ML**: [Google Genkit](https://firebase.google.com/docs/genkit) dengan Gemini
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Maps**: [OpenLayers](https://openlayers.org/)
+- **Language**: TypeScript
+
+## 📦 Build untuk Production
+
+```bash
+# Build optimized production bundle
+npm run build:prod
+
+# Start production server
+npm start
+
+# Analyze bundle size
+npm run analyze
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+## 🤝 Contributing
+
+Kami menyambut kontribusi dari komunitas! Silakan baca [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan kontribusi.
+
+1. Fork repository ini
+2. Buat branch fitur (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 License
+
+Proyek ini dilisensikan di bawah MIT License - lihat file [LICENSE](LICENSE) untuk detail.
+
+## 👥 Tim
+
+**Jejak Meong Team** - Dibuat dengan ❤️ untuk komunitas pecinta kucing Indonesia
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - Framework React yang luar biasa
+- [Firebase](https://firebase.google.com/) - Backend as a Service
+- [Google AI](https://ai.google.dev/) - AI capabilities
+- [shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
+- Semua kontributor yang telah membantu proyek ini
+
+## 📞 Kontak & Support
+
+- 🐛 [Report Bug](https://github.com/yourusername/jejak-meong/issues)
+- 💡 [Request Feature](https://github.com/yourusername/jejak-meong/issues)
+- 📧 Email: support@jejakmeong.com
+- 🌐 Website: [jejakmeong.com](https://jejakmeong.com)
+
+---
+
+<div align="center">
+
+**Bantu kami menemukan kucing yang hilang! ⭐ Star repository ini jika Anda merasa terbantu**
+
+Made with ❤️ in Indonesia 🇮🇩
+
+</div>

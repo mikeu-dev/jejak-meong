@@ -1,7 +1,24 @@
 {
-  "name": "nextn",
-  "version": "0.1.0",
-  "private": true,
+  "name": "jejak-meong",
+  "version": "1.0.0",
+  "description": "Aplikasi web untuk membantu menemukan dan melaporkan kucing yang hilang atau ditemukan di sekitar Anda",
+  "author": "Jejak Meong Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/jejak-meong"
+  },
+  "keywords": [
+    "cat-tracker",
+    "lost-pets",
+    "found-cats",
+    "pet-finder",
+    "community",
+    "indonesia",
+    "nextjs",
+    "firebase"
+  ],
+  "private": false,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
@@ -10,10 +27,13 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "build:prod": "NODE_ENV=production next build",
+    "analyze": "ANALYZE=true npm run build",
     "test": "echo \"Testing framework belum dikonfigurasi. Lihat docs/TESTING.md untuk setup.\"",
     "test:watch": "echo \"Testing framework belum dikonfigurasi.\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",

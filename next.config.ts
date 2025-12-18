@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development';
+
     return [
       {
         source: '/:path*',
@@ -74,9 +76,32 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(self)',
           },
+          // Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: isDev
+              ? '' // Disable CSP in development for easier debugging
+              : [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "img-src 'self' data: blob: https: http:",
+                "font-src 'self' data: https://fonts.gstatic.com",
+                "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://www.google-analytics.com",
+                "frame-src 'self' https://accounts.google.com",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'self'",
+              ].join('; '),
+          },
         ],
       },
     ];
+  },
+  // Production optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 };
 
