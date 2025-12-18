@@ -2,12 +2,10 @@
 
 import { z } from 'zod';
 import { addDoc, collection, serverTimestamp, GeoPoint } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { suggestCatBreedsFromImage } from '@/ai/flows/suggest-cat-breeds-from-image';
-import { generateStorageFilename } from '@/lib/image-utils';
 
 const catSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -28,28 +26,7 @@ export type FormState = {
 };
 
 /**
- * Upload image to Firebase Storage and return download URL
- */
-async function uploadImageToStorage(file: File): Promise<string> {
-  const filename = generateStorageFilename(file.name);
-  const storageRef = ref(storage, `cats/${filename}`);
-
-  // Upload file
-  const snapshot = await uploadBytes(storageRef, file, {
-    contentType: file.type,
-    customMetadata: {
-      originalName: file.name,
-      uploadedAt: new Date().toISOString(),
-    },
-  });
-
-  // Get download URL
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  return downloadURL;
-}
-
-/**
- * Helper function to convert a File to a data URI (for AI processing)
+ * Helper function to convert a File to a data URI (for AI processing and storage)
  */
 async function fileToDataUri(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -89,14 +66,18 @@ export async function addCat(
   let imageUrl = '';
 
   if (imageFile && imageFile.size > 0) {
-    console.log('Step 2: Image file found. Uploading to Firebase Storage...');
+    console.log('Step 2: Image file found. Converting to data URI...');
     try {
-      // Upload to Firebase Storage instead of converting to Data URI
-      imageUrl = await uploadImageToStorage(imageFile);
-      console.log('Step 3: Image uploaded to Storage successfully. URL:', imageUrl);
+      // Firestore has a 1MB limit per document
+      // Client should compress image before upload (handled in form component)
+      if (imageFile.size > 1024 * 1024) {
+        return { success: false, message: 'Image is too large. Please use an image under 1MB.' };
+      }
+      imageUrl = await fileToDataUri(imageFile);
+      console.log('Step 3: Image converted to data URI successfully.');
     } catch (error: any) {
-      console.error('!!! IMAGE UPLOAD ERROR !!!', error);
-      return { success: false, message: `Failed to upload image: ${error.message}` };
+      console.error('!!! IMAGE CONVERSION ERROR !!!', error);
+      return { success: false, message: `Failed to process image: ${error.message}` };
     }
   } else {
     console.log('Step 2 & 3: No image file provided, skipping.');
@@ -110,7 +91,7 @@ export async function addCat(
       type: validatedFields.data.type,
       breed: validatedFields.data.breed,
       locationText: validatedFields.data.locationText,
-      imageUrl: imageUrl, // Storing Storage URL instead of Data URI
+      imageUrl: imageUrl, // Storing data URI
       location: new GeoPoint(validatedFields.data.latitude, validatedFields.data.longitude),
       createdAt: serverTimestamp(),
     };
