@@ -7,13 +7,14 @@ import type { Cat } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MapPin, Calendar, Edit, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
+import { MapPin, Calendar, Edit, Trash2, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import Link from 'next/link';
 import { EditCatDialog } from './edit-cat-dialog';
 import { DeleteCatDialog } from './delete-cat-dialog';
+import { UpdateCatStatusDialog } from './update-cat-status-dialog';
 
 interface UserReportsListProps {
     userId: string;
@@ -214,13 +215,23 @@ export function UserReportsList({ userId }: UserReportsListProps) {
                                         Lihat Detail
                                     </Button>
                                 </Link>
+                                <UpdateCatStatusDialog
+                                    catId={cat.id}
+                                    userId={userId}
+                                    currentStatus={cat.status || 'active'}
+                                    catName={cat.name}
+                                >
+                                    <Button variant="outline" size="sm" title="Update Status">
+                                        <RefreshCw className="h-4 w-4" />
+                                    </Button>
+                                </UpdateCatStatusDialog>
                                 <EditCatDialog cat={cat} userId={userId}>
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline" size="sm" title="Edit">
                                         <Edit className="h-4 w-4" />
                                     </Button>
                                 </EditCatDialog>
                                 <DeleteCatDialog catId={cat.id} userId={userId} catName={cat.name}>
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline" size="sm" title="Hapus">
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </DeleteCatDialog>

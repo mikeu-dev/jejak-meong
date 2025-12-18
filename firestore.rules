@@ -8,57 +8,29 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
     function isValidCatData() {
       let data = request.resource.data;
-      return data.keys().hasAll(['name', 'gender', 'type', 'breed', 'locationText', 'location', 'createdAt'])
-        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
-        && data.gender in ['Male', 'Female', 'Unknown']
-        && data.type is string && data.type.size() > 0 && data.type.size() <= 50
-        && data.breed is string && data.breed.size() > 0 && data.breed.size() <= 100
-        && data.locationText is string && data.locationText.size() > 0 && data.locationText.size() <= 500
-        && data.location is latlng
-        && data.createdAt is timestamp;
+      return data.name is string &&
+             data.gender in ['Male', 'Female', 'Unknown'] &&
+             data.type is string &&
+             data.breed is string &&
+             data.locationText is string &&
+             data.location is latlng &&
+             data.imageUrl is string;
     }
     
-    function isValidImageUrl() {
-      let data = request.resource.data;
-      return !data.keys().hasAny(['imageUrl']) 
-        || (data.imageUrl is string && data.imageUrl.size() <= 2048);
-    }
-    
-    function isValidImageUrls() {
-      let data = request.resource.data;
-      return !data.keys().hasAny(['imageUrls']) 
-        || (data.imageUrls is list && data.imageUrls.size() <= 5);
+    function isValidStatus() {
+      let status = request.resource.data.status;
+      return !('status' in request.resource.data) || 
+             status in ['active', 'found', 'closed'];
     }
     
     // Cats collection rules
     match /cats/{catId} {
-      // Anyone can read cat data
-      allow read: if true;
-      
-      // Anyone can create cat reports (with validation)
-      allow create: if isValidCatData() 
-        && isValidImageUrl() 
-        && isValidImageUrls();
-      
-      // Only authenticated users can update (for future features)
-      allow update: if isAuthenticated() 
-        && isValidCatData() 
-        && isValidImageUrl() 
-        && isValidImageUrls();
-      
-      // Only authenticated users can delete (for future features)
-      allow delete: if isAuthenticated();
-      
-      // Comments subcollection (for future feature)
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update, delete: if isAuthenticated() 
-          && request.auth.uid == resource.data.userId;
-      }
-    }
     
     // Users collection (for future features)
     match /users/{userId} {
