@@ -24,7 +24,7 @@ export function LocationPicker({ onLocationSelect }: LocationPickerProps) {
 
   useEffect(() => {
     if (!mapRef.current) return;
-    
+
     const jakartaCoords = fromLonLat([106.8456, -6.2088]);
 
     vectorSourceRef.current = new VectorSource();
@@ -55,22 +55,23 @@ export function LocationPicker({ onLocationSelect }: LocationPickerProps) {
           geometry: new Point(evt.coordinate),
         });
         markerRef.current.setStyle(new Style({
-            image: new Circle({
-                radius: 8,
-                fill: new Fill({color: 'rgba(255, 255, 255, 0.7)'}),
-                stroke: new Stroke({color: 'hsl(var(--primary))', width: 3})
-            })
+          image: new Circle({
+            radius: 8,
+            fill: new Fill({ color: 'rgba(255, 255, 255, 0.7)' }),
+            stroke: new Stroke({ color: 'hsl(var(--primary))', width: 3 })
+          })
         }));
         vectorSourceRef.current?.addFeature(markerRef.current);
       } else {
-        markerRef.current.getGeometry()?.setCoordinates(evt.coordinate);
+        const geometry = markerRef.current.getGeometry() as Point;
+        geometry?.setCoordinates(evt.coordinate);
       }
 
       onLocationSelect({ lat: lonLat[1], lon: lonLat[0] });
     });
 
     return () => mapInstance.current?.setTarget(undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div ref={mapRef} className="w-full h-64 rounded-md border" />;

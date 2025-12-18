@@ -50,7 +50,7 @@ export function middleware(request: NextRequest) {
 
     // Rate limiting for specific paths
     if (request.nextUrl.pathname.startsWith('/api/')) {
-        const identifier = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+        const identifier = (request as any).ip || request.headers.get('x-forwarded-for') || 'unknown';
 
         if (!rateLimit(identifier)) {
             return new NextResponse(

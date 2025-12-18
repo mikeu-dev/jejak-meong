@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Camera, Loader2, X } from 'lucide-react';
 
-import { addCat, getBreedSuggestions, reverseGeocode } from '@/app/actions';
+import { addCat, getBreedSuggestions, reverseGeocode, type FormState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +22,7 @@ import { Textarea } from './ui/textarea';
 import { LocationPicker } from './location-picker';
 import { useLanguage } from '@/context/language-context';
 
-const initialState = {
+const initialState: FormState = {
   message: '',
   success: false,
 };
@@ -43,7 +43,7 @@ type AddCatFormProps = {
 
 export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   const { t, tError } = useLanguage();
-  const [formState, formAction] = useActionState(addCat, initialState);
+  const [formState, formAction] = useActionState<FormState, FormData>(addCat, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -76,13 +76,13 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   const handleLocationSelect = async (coords: { lat: number; lon: number }) => {
     setLocation(coords);
     setIsGeocoding(true);
-    if(locationTextRef.current) locationTextRef.current.value = t('fetchingAddress');
+    if (locationTextRef.current) locationTextRef.current.value = t('fetchingAddress');
     const result = await reverseGeocode(coords.lat, coords.lon);
     setIsGeocoding(false);
     if (result.address && locationTextRef.current) {
       locationTextRef.current.value = result.address;
     } else if (result.error) {
-      if(locationTextRef.current) locationTextRef.current.value = '';
+      if (locationTextRef.current) locationTextRef.current.value = '';
       toast({ title: t('toastLocationErrorTitle'), description: tError(result.error), variant: 'destructive' });
     }
   };
@@ -109,12 +109,12 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
       if (result.suggestions) {
         setBreedSuggestions(result.suggestions);
         if (result.suggestions[0] && breedInputRef.current) {
-           breedInputRef.current.value = result.suggestions[0];
+          breedInputRef.current.value = result.suggestions[0];
         }
       }
     }
   };
-  
+
   const handleRemoveImage = () => {
     setImagePreview(null);
     setBreedSuggestions([]);
