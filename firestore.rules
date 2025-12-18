@@ -31,6 +31,54 @@ service cloud.firestore {
     
     // Cats collection rules
     match /cats/{catId} {
+      // Anyone can read cat reports (public)
+      allow read: if true;
+      
+      // Only authenticated users can create
+      allow create: if isAuthenticated() &&
+                      isValidCatData() &&
+                      isValidStatus() &&
+                      // Auto-set userId to current user
+                      request.resource.data.userId == request.auth.uid &&
+                      // Ensure status is set to 'active' by default
+                      (!('status' in request.resource.data) || 
+                       request.resource.data.status == 'active');
+      
+      // Only owner can update
+      allow update: if isAuthenticated() &&
+                      isOwner(resource.data.userId) &&
+                      isValidCatData() &&
+                      isValidStatus() &&
+                      // userId cannot be changed
+                      request.resource.data.userId == resource.data.userId;
+      
+      // Only owner can delete
+      allow delete: if isAuthenticated() &&
+                      isOwner(resource.data.userId);
+    }
+    
+    // Comments collection rules (for future implementation)
+    match /comments/{commentId} {
+      // Anyone can read comments
+      allow read: if true;
+      
+      // Only authenticated users can create comments
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.catId is string &&
+                      request.resource.data.content is string;
+      
+      // Only owner can update their own comments
+      allow update: if isAuthenticated() &&
+                      isOwner(resource.data.userId) &&
+                      // userId and catId cannot be changed
+                      request.resource.data.userId == resource.data.userId &&
+                      request.resource.data.catId == resource.data.catId;
+      
+      // Only owner can delete their own comments
+      allow delete: if isAuthenticated() &&
+                      isOwner(resource.data.userId);
+    }
     
     // Users collection (for future features)
     match /users/{userId} {
