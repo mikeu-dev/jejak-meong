@@ -5,7 +5,7 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { LogIn, LogOut, Plus } from 'lucide-react';
+import { LogIn, LogOut, Plus, User } from 'lucide-react';
 
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { AddCatSheet } from './add-cat-sheet';
+import Link from 'next/link';
 
 export function AuthButton() {
   const { user } = useAuth();
@@ -47,10 +48,10 @@ export function AuthButton() {
     return (
       <div className="flex items-center gap-2">
         <AddCatSheet>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('reportCatButton')}
-            </Button>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('reportCatButton')}
+          </Button>
         </AddCatSheet>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -71,6 +72,12 @@ export function AuthButton() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profil</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t('logoutButton')}</span>

@@ -21,6 +21,7 @@ import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { LocationPicker } from './location-picker';
 import { useLanguage } from '@/context/language-context';
+import { useAuth } from '@/context/auth-context';
 
 const initialState: FormState = {
   message: '',
@@ -43,6 +44,7 @@ type AddCatFormProps = {
 
 export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
   const { t, tError } = useLanguage();
+  const { user } = useAuth();
   const [formState, formAction] = useActionState<FormState, FormData>(addCat, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
@@ -128,6 +130,15 @@ export function AddCatForm({ onFormSuccess }: AddCatFormProps) {
       if (location) {
         formData.set('latitude', String(location.lat));
         formData.set('longitude', String(location.lon));
+      }
+      // Add user data
+      if (user) {
+        formData.set('userId', user.uid);
+        formData.set('userEmail', user.email || '');
+        formData.set('userName', user.displayName || '');
+        if (user.photoURL) {
+          formData.set('userPhotoURL', user.photoURL);
+        }
       }
       formAction(formData);
     }} className="grid gap-6 py-4">

@@ -17,6 +17,12 @@ const catSchema = z.object({
   longitude: z.coerce.number().min(-180).max(180),
   imageUrl: z.string().url().optional(),
   imageUrls: z.array(z.string().url()).max(5).optional(),
+  // User fields
+  userId: z.string().optional(),
+  userEmail: z.string().email().optional(),
+  userName: z.string().optional(),
+  userPhotoURL: z.string().url().optional(),
+  contactInfo: z.string().optional(),
 });
 
 export type FormState = {
@@ -87,6 +93,7 @@ export async function addCat(
       locationText: validatedFields.data.locationText,
       location: new GeoPoint(validatedFields.data.latitude, validatedFields.data.longitude),
       createdAt: serverTimestamp(),
+      status: 'active', // Default status
     };
 
     // Add image URLs if present
@@ -97,10 +104,28 @@ export async function addCat(
       catData.imageUrls = validatedFields.data.imageUrls;
     }
 
+    // Add user data if present
+    if (validatedFields.data.userId) {
+      catData.userId = validatedFields.data.userId;
+    }
+    if (validatedFields.data.userEmail) {
+      catData.userEmail = validatedFields.data.userEmail;
+    }
+    if (validatedFields.data.userName) {
+      catData.userName = validatedFields.data.userName;
+    }
+    if (validatedFields.data.userPhotoURL) {
+      catData.userPhotoURL = validatedFields.data.userPhotoURL;
+    }
+    if (validatedFields.data.contactInfo) {
+      catData.contactInfo = validatedFields.data.contactInfo;
+    }
+
     const docRef = await addDoc(collection(db, "cats"), catData);
     console.log('Step 3: Document written to Firestore with ID:', docRef.id);
 
     revalidatePath('/');
+    revalidatePath('/profile');
     return { success: true, message: 'Cat reported successfully!' };
 
   } catch (error: any) {
